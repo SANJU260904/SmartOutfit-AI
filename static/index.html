@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SmartOutfit</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+
+  <!-- AI Header -->
+  <header class="ai-header">
+    <div class="container">
+      <div class="ai-badge">🤖 AI Stylist • Ready</div>
+      <h1 class="hero-title">SmartOutfit</h1>
+      <p class="hero-subtitle">
+        An AI stylist that builds outfits from <strong>your real wardrobe</strong> —
+        based on event, weather, and usage history.
+      </p>
+    </div>
+  </header>
+
+  <!-- Main App -->
+  <main class="container">
+
+    <!-- AI Control Panel -->
+    <section class="ai-panel">
+      <h2 class="panel-title">Tell the AI about your day</h2>
+
+      <div class="panel-row">
+        <input type="file" id="imageInput" accept="image/*">
+        <button id="uploadBtn">Upload clothing</button>
+      </div>
+
+      <div class="panel-row">
+        <label>
+          Event
+          <select id="eventSelect">
+            <option value="casual">Casual</option>
+            <option value="formal">Formal</option>
+            <option value="date">Date</option>
+            <option value="party">Party</option>
+            <option value="traditional">Traditional / Indian</option>
+          </select>
+        </label>
+
+        <label>
+          Weather
+          <select id="weatherSelect">
+            <option value="clear">Clear</option>
+            <option value="hot">Hot</option>
+            <option value="cold">Cold</option>
+            <option value="rainy">Rainy</option>
+            <option value="windy">Windy</option>
+            <option value="humid">Humid</option>
+            <option value="cloudy">Cloudy</option>
+          </select>
+        </label>
+
+        <button id="recommendBtn" class="primary">
+          Generate Outfit
+        </button>
+      </div>
+    </section>
+
+    <!-- Wardrobe -->
+    <section class="section">
+      <h2 class="section-title">Your Wardrobe</h2>
+      <p class="section-subtitle">
+        Upload clothes and tag categories to help the AI understand your style.
+      </p>
+      <div id="items" class="grid" aria-live="polite"></div>
+    </section>
+
+    <!-- Recommendations -->
+    <section class="section highlight">
+      <h2 class="section-title">AI Outfit Recommendations</h2>
+      <p class="section-subtitle">
+        Curated outfits based on your selections and wardrobe history.
+      </p>
+      <div id="outfits" class="grid" aria-live="polite"></div>
+    </section>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

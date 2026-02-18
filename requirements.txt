@@ -1,0 +1,8 @@
+flask
+flask_sqlalchemy
+pillow
+torch
+torchvision
+numpy
+scikit-learn
+gunicorn
