@@ -9,6 +9,14 @@
 
 <body>
 
+  <!-- Top Navigation -->
+  <nav class="top-nav">
+    <button onclick="showPage('home')">Home</button>
+    <button onclick="showPage('wardrobe')">Wardrobe</button>
+    <button onclick="showPage('outfits')">Outfits</button>
+    <button onclick="showPage('history')">History</button> <!-- NEW -->
+  </nav>
+
   <!-- AI Header -->
   <header class="ai-header">
     <div class="container">
@@ -21,66 +29,71 @@
     </div>
   </header>
 
-  <!-- Main App -->
   <main class="container">
 
-    <!-- AI Control Panel -->
-    <section class="ai-panel">
-      <h2 class="panel-title">Tell the AI about your day</h2>
+    <!-- HOME PAGE -->
+    <div id="homePage">
+      <section class="ai-panel">
+        <h2 class="panel-title">Tell the AI about your day</h2>
 
-      <div class="panel-row">
-        <input type="file" id="imageInput" accept="image/*">
-        <button id="uploadBtn">Upload clothing</button>
-      </div>
+        <div class="panel-row">
+          <input type="file" id="imageInput" accept="image/*">
+          <button id="uploadBtn">Upload clothing</button>
+        </div>
 
-      <div class="panel-row">
-        <label>
-          Event
-          <select id="eventSelect">
-            <option value="casual">Casual</option>
-            <option value="formal">Formal</option>
-            <option value="date">Date</option>
-            <option value="party">Party</option>
-            <option value="traditional">Traditional / Indian</option>
-          </select>
-        </label>
+        <div class="panel-row">
+          <label>
+            Event
+            <select id="eventSelect">
+              <option value="casual">Casual</option>
+              <option value="formal">Formal</option>
+              <option value="date">Date</option>
+              <option value="party">Party</option>
+              <option value="traditional">Traditional / Indian</option>
+            </select>
+          </label>
 
-        <label>
-          Weather
-          <select id="weatherSelect">
-            <option value="clear">Clear</option>
-            <option value="hot">Hot</option>
-            <option value="cold">Cold</option>
-            <option value="rainy">Rainy</option>
-            <option value="windy">Windy</option>
-            <option value="humid">Humid</option>
-            <option value="cloudy">Cloudy</option>
-          </select>
-        </label>
+          <label>
+            Weather
+            <select id="weatherSelect">
+              <option value="clear">Clear</option>
+              <option value="hot">Hot</option>
+              <option value="cold">Cold</option>
+              <option value="rainy">Rainy</option>
+              <option value="windy">Windy</option>
+              <option value="humid">Humid</option>
+              <option value="cloudy">Cloudy</option>
+            </select>
+          </label>
 
-        <button id="recommendBtn" class="primary">
-          Generate Outfit
-        </button>
-      </div>
-    </section>
+          <button id="recommendBtn">Generate Outfit</button>
+        </div>
+      </section>
+    </div>
 
-    <!-- Wardrobe -->
-    <section class="section">
-      <h2 class="section-title">Your Wardrobe</h2>
-      <p class="section-subtitle">
-        Upload clothes and tag categories to help the AI understand your style.
-      </p>
-      <div id="items" class="grid" aria-live="polite"></div>
-    </section>
+    <!-- WARDROBE PAGE -->
+    <div id="wardrobePage" style="display:none;">
+      <section class="section">
+        <h2 class="section-title">Your Wardrobe</h2>
+        <div id="items" class="grid"></div>
+      </section>
+    </div>
 
-    <!-- Recommendations -->
-    <section class="section highlight">
-      <h2 class="section-title">AI Outfit Recommendations</h2>
-      <p class="section-subtitle">
-        Curated outfits based on your selections and wardrobe history.
-      </p>
-      <div id="outfits" class="grid" aria-live="polite"></div>
-    </section>
+    <!-- OUTFITS PAGE -->
+    <div id="outfitsPage" style="display:none;">
+      <section class="section highlight">
+        <h2 class="section-title">AI Outfit Recommendations</h2>
+        <div id="outfits" class="grid"></div>
+      </section>
+    </div>
+
+    <!-- HISTORY PAGE -->
+    <div id="historyPage" style="display:none;">
+      <section class="section">
+        <h2 class="section-title">Outfit History</h2>
+        <div id="history" class="grid"></div>
+      </section>
+    </div>
 
   </main>
 

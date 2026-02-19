@@ -1,3 +1,5 @@
+
+
 /* ---------------- API HELPER ---------------- */
 async function api(path, opts = {}) {
   const res = await fetch('/api/' + path, opts);
@@ -15,6 +17,29 @@ const CLOTHING_TYPES = [
   'shoes','heels','flats','sandals',
   'unknown'
 ];
+
+/* ---------------- PAGE SWITCH ---------------- */
+function showPage(page) {
+  document.getElementById('homePage').style.display = 'none';
+  document.getElementById('wardrobePage').style.display = 'none';
+  document.getElementById('outfitsPage').style.display = 'none';
+  document.getElementById('historyPage').style.display = 'none';
+
+  if (page === 'home') {
+    document.getElementById('homePage').style.display = 'block';
+  }
+  if (page === 'wardrobe') {
+    document.getElementById('wardrobePage').style.display = 'block';
+  }
+  if (page === 'outfits') {
+    document.getElementById('outfitsPage').style.display = 'block';
+  }
+  if (page === 'history') {
+    document.getElementById('historyPage').style.display = 'block';
+    loadHistory();   // 🔥 Load only when clicked
+  }
+}
+
 
 /* ---------------- UPLOAD ---------------- */
 document.getElementById('uploadBtn').onclick = async () => {
@@ -46,7 +71,6 @@ async function loadItems() {
     meta.className = 'meta';
     meta.innerText = `${it.category} • worn: ${it.times_worn}`;
 
-    /* category dropdown */
     const select = document.createElement('select');
     CLOTHING_TYPES.forEach(t => {
       const o = document.createElement('option');
@@ -65,7 +89,6 @@ async function loadItems() {
       loadItems();
     };
 
-    /* worn */
     const wornBtn = document.createElement('button');
     wornBtn.innerText = '👣 Worn +1';
     wornBtn.onclick = async () => {
@@ -77,22 +100,17 @@ async function loadItems() {
       loadItems();
     };
 
-    /* favorite (FIXED) */
     const favBtn = document.createElement('button');
     favBtn.innerText = it.favorited ? '⭐ Favorited' : '☆ Favorite';
     favBtn.onclick = async () => {
       await api('favorite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          item_id: it.id,
-          favorite: !it.favorited
-        })
+        body: JSON.stringify({ item_id: it.id })
       });
       loadItems();
     };
 
-    /* delete */
     const delBtn = document.createElement('button');
     delBtn.innerText = '🗑 Delete';
     delBtn.onclick = async () => {
@@ -124,6 +142,8 @@ document.getElementById('recommendBtn').onclick = async () => {
     body: JSON.stringify({ event, weather })
   });
 
+  showPage('outfits');
+
   if (!data.outfits || data.outfits.length === 0) {
     div.innerHTML = `<div class="notice">❌ ${data.message}</div>`;
     return;
@@ -138,7 +158,6 @@ document.getElementById('recommendBtn').onclick = async () => {
     title.innerText = `Outfit ${idx + 1}`;
     card.appendChild(title);
 
-    /* vertical images */
     const imagesWrap = document.createElement('div');
     imagesWrap.className = 'outfit-images';
 
@@ -157,7 +176,75 @@ document.getElementById('recommendBtn').onclick = async () => {
 
     div.appendChild(card);
   });
+
+     // 🔥 Refresh history after generating
 };
+
+/* ---------------- LOAD HISTORY ---------------- */
+/* ---------------- LOAD HISTORY ---------------- */
+async function loadHistory() {
+  const history = await api('history');
+  const div = document.getElementById('history');
+
+  if (!div) return;
+
+  div.innerHTML = '';
+
+  if (!history || history.length === 0) {
+    div.innerHTML = `<div class="notice">No outfit history yet.</div>`;
+    return;
+  }
+
+  history.forEach(entry => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.innerText = `${entry.event} • ${entry.weather} • ${entry.created_at}`;
+    card.appendChild(meta);
+
+    const imagesWrap = document.createElement('div');
+    imagesWrap.className = 'outfit-images';
+
+    entry.items.forEach(it => {
+      const img = document.createElement('img');
+      img.src = it.url;
+      imagesWrap.appendChild(img);
+    });
+
+    card.appendChild(imagesWrap);
+
+    const why = document.createElement('div');
+    why.className = 'outfit-why';
+    why.innerText = entry.justification;
+    card.appendChild(why);
+
+    // ✅ ADD DELETE BUTTON HERE
+    const delBtn = document.createElement('button');
+    delBtn.innerText = '🗑 Delete';
+    delBtn.onclick = async () => {
+      if (!confirm('Delete this history entry?')) return;
+
+      await api('delete_history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ history_id: entry.id })
+      });
+
+      loadHistory();  // refresh after delete
+    };
+
+    card.appendChild(delBtn);
+
+    div.appendChild(card);
+  });
+}
 
 /* ---------------- INIT ---------------- */
 loadItems();
+showPage('home');
+
+
+
+

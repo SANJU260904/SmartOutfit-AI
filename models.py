@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
+from datetime import datetime
 
 db = SQLAlchemy()
 
@@ -8,7 +9,19 @@ class ClothingItem(db.Model):
     filename = Column(String, unique=True, nullable=False)
     path = Column(String, nullable=False)
     embedding_path = Column(String, nullable=False)
-    category = Column(String, default="unknown")  # e.g., top, bottom, dress, outer
+    category = Column(String, default="unknown")
     color = Column(String, default="unknown")
     times_worn = Column(Integer, default=0)
     favorited = Column(Boolean, default=False)
+
+
+class OutfitHistory(db.Model):
+    id = Column(Integer, primary_key=True)
+
+    event = Column(String, nullable=False)
+    weather = Column(String, nullable=False)
+
+    items_used = Column(Text, nullable=False)  # store item IDs as comma-separated string
+    justification = Column(Text, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)

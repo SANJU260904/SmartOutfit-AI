@@ -1,8 +1,7 @@
 flask
 flask_sqlalchemy
-pillow
+gunicorn
+numpy
 torch
 torchvision
-numpy
-scikit-learn
-gunicorn
+pillow

@@ -2,10 +2,10 @@ import os
 import numpy as np
 from flask import Flask, request, jsonify, send_file, send_from_directory
 from datetime import datetime
-from models import db, ClothingItem
+from models import db, ClothingItem, OutfitHistory
 from recommender import recommend_outfits
-
 from scripts.classify_helper import load_classifier, predict_category
+
 
 UPLOAD_FOLDER = 'uploads'
 EMBED_FOLDER = 'embeddings'
@@ -40,7 +40,9 @@ def upload():
     path = os.path.join(UPLOAD_FOLDER, filename)
     f.save(path)
 
-    embedding = get_embedding(path)
+    # TEMPORARY SAFE EMBEDDING
+    embedding = np.zeros(512)
+
     emb_path = os.path.join(EMBED_FOLDER, filename + ".npy")
     np.save(emb_path, embedding)
 
@@ -103,10 +105,67 @@ def recommend():
 
     recs = recommend_outfits(event=event, weather=weather, k=3)
 
+    for outfit in recs:
+        item_ids = [str(item["id"]) for item in outfit["items"]]
+
+        history_entry = OutfitHistory(
+            event=event,
+            weather=weather,
+            items_used=",".join(item_ids),
+            justification=outfit["justification"]
+        )
+
+        db.session.add(history_entry)
+
+    db.session.commit()
+
     return jsonify({
         "outfits": recs,
         "message": "ok" if recs else "No suitable outfits found"
     })
+
+# ---------- HISTORY ----------
+@app.route('/api/history')
+def history():
+    history_entries = OutfitHistory.query.order_by(OutfitHistory.created_at.desc()).all()
+
+    result = []
+
+    for entry in history_entries:
+        item_ids = entry.items_used.split(",")
+        items = []
+
+        for item_id in item_ids:
+            item = ClothingItem.query.get(int(item_id))
+            if item:
+                items.append({
+                    "id": item.id,
+                    "url": f"/image/{item.id}"
+                })
+
+        result.append({
+            "id": entry.id,
+            "event": entry.event,
+            "weather": entry.weather,
+            "items": items,
+            "justification": entry.justification,
+            "created_at": entry.created_at.strftime("%Y-%m-%d %H:%M")
+        })
+
+    return jsonify(result)
+
+# ---------- DELETE HISTORY ----------
+@app.route('/api/delete_history', methods=['POST'])
+def delete_history():
+    entry = OutfitHistory.query.get(request.json.get('history_id'))
+    if not entry:
+        return jsonify({"error": "not found"}), 404
+
+    db.session.delete(entry)
+    db.session.commit()
+    return jsonify({"ok": True})
+
+
 
 # ---------- WORN ----------
 @app.route('/api/mark_worn', methods=['POST'])
