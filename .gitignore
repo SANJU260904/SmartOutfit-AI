@@ -5,3 +5,5 @@ uploads/
 embeddings/
 instance/
 smartoutfit.db
+*.pkl
+inspect_db.py

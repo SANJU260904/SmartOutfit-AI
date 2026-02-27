@@ -1,213 +1,212 @@
-SmartOutfit-AI
-AI-Powered Outfit Recommendation System
+🧥 SmartOutfit – AI-Powered Personalized Outfit Recommendation System
+🚀 Overview
 
-SmartOutfit is a full-stack AI-based outfit recommendation system that generates personalized outfit combinations based on event type, weather conditions, and user wardrobe inventory.
+SmartOutfit is a hybrid AI-based fashion recommendation web application that generates personalized outfit combinations from a user's real wardrobe.
 
-The system combines a deterministic rule-based filtering engine with intelligent scoring logic to produce coherent, explainable, and context-aware outfit suggestions.
+The system combines:
 
-🚀 Key Features
+Rule-based contextual filtering
 
-Wardrobe item upload and storage
+Supervised Machine Learning ranking
 
-Automatic clothing category tagging
+Behavioral feature engineering
 
-Event-aware outfit filtering (casual, formal, party, etc.)
+Unlike static fashion apps, SmartOutfit dynamically generates outfit combinations and intelligently ranks them based on learned user preferences.
 
-Weather-based outfit constraints
+🎯 Problem Statement
 
-Multi-item outfit generation (top, bottom, footwear, outerwear)
+Traditional outfit recommendation systems:
 
-Human-readable AI-generated outfit explanations
+Rely purely on fixed rules (no personalization), or
 
-REST-based Flask backend
+Require large image datasets and deep learning models
 
-Clean responsive frontend (HTML, CSS, JS)
+SmartOutfit solves this by:
 
-SQLite-based persistent storage
+Learning from structured wardrobe usage data
 
-Docker support for containerized deployment
+Training a supervised ML model on outfit history
 
-🧠 System Architecture
+Combining deterministic logic with probabilistic ranking
 
-The recommendation pipeline follows a hybrid architecture:
+🧠 AI & Machine Learning Component
 
-1️⃣ User Input
+SmartOutfit implements a supervised Logistic Regression model using scikit-learn.
 
-Event type
+🔹 Training Data Source
 
-Weather condition
+The training dataset is automatically derived from:
 
-2️⃣ Rule-Based Filtering
+Outfit history table
 
-Filters wardrobe items based on event compatibility
+Clothing usage frequency
 
-Applies weather constraints (e.g., sweaters for cold weather)
+Favorite selections
 
-Ensures category completeness (top + bottom + footwear)
+Each previously generated outfit becomes a training sample.
 
-3️⃣ Outfit Construction
+🔹 Feature Engineering
 
-Combines filtered items into valid outfit sets
+For every outfit, the system extracts:
 
-Applies ranking logic
+Encoded event type
 
-Selects top-K recommendations
+Encoded weather type
 
-4️⃣ Explainability Layer
+Number of favorited items
 
-Generates human-readable justifications.
+Average times worn
 
-Example:
+Unique category count
 
-“This outfit works well for a formal evening event as the structured outerwear adds elegance while neutral tones maintain a polished look.”
+Total number of items
 
-🛠 Tech Stack
-Backend
+These structured features form a tabular dataset used for training.
 
-Python
+🔹 Model Training
 
-Flask
+Algorithm: Logistic Regression
 
-SQLAlchemy
+Learning Type: Supervised Binary Classification
 
-SQLite
+Framework: scikit-learn
 
-AI / Logic Layer
+Model Persistence: Joblib
 
-Custom rule-based recommendation engine
+The model predicts a probability score representing user preference likelihood.
 
-Lightweight embedding placeholder (extensible)
-
-Modular classifier integration (optional)
-
-Frontend
+🏗 System Architecture
+🔹 Frontend
 
 HTML
 
 CSS
 
-JavaScript (Vanilla JS)
+Vanilla JavaScript
 
-DevOps
+API-driven UI updates
 
-Git
+🔹 Backend
 
-Docker
+Python
 
-📂 Project Structure
-SmartOutfit-AI/
-│
-├── app.py
-├── models.py
-├── recommender.py
-├── requirements.txt
-├── Dockerfile
-│
-├── scripts/
-│   ├── preprocess.py
-│   ├── train_classifier.py
-│   └── classify_helper.py
-│
-├── static/
-│   ├── index.html
-│   ├── styles.css
-│   └── app.js
-│
-└── README.md
+Flask
 
-⚙️ Installation & Setup
-1️⃣ Clone Repository
-git clone https://github.com/YOUR_USERNAME/SmartOutfit-AI.git
-cd SmartOutfit-AI
+SQLAlchemy ORM
 
-2️⃣ Create Virtual Environment
+SQLite Database
 
-Windows
+🔹 Machine Learning
 
+scikit-learn
+
+NumPy
+
+Pandas
+
+Joblib
+
+🔄 Recommendation Pipeline
+
+User selects Event + Weather
+↓
+Rule engine generates valid outfit combinations
+↓
+Feature extraction for each combination
+↓
+Logistic Regression predicts preference probability
+↓
+Novelty penalty applied to reduce repetition
+↓
+Top-ranked outfits returned
+
+This ensures:
+
+Context-aware recommendations
+
+Behavioral personalization
+
+Reduced repetition
+
+Balanced exploration
+
+📂 Database Design
+clothing_item
+
+id
+
+category
+
+times_worn
+
+favorited
+
+embedding_path (future extensibility)
+
+outfit_history
+
+event
+
+weather
+
+items_used
+
+justification
+
+created_at
+
+The ML training dataset is derived directly from these tables.
+
+💡 Key Highlights
+
+Hybrid rule-based + ML ranking architecture
+
+Behavioral data-driven personalization
+
+Real-time inference integration
+
+Model serialization and deployment
+
+Fully explainable ML model
+
+🛠 How to Run Locally
+git clone <your-repo-url>
+cd SmartOutfit
 python -m venv venv
-venv\Scripts\activate
-
-
-Mac/Linux
-
-python3 -m venv venv
-source venv/bin/activate
-
-3️⃣ Install Dependencies
+venv\Scripts\activate   # Windows
 pip install -r requirements.txt
-
-4️⃣ Run Application
 python app.py
 
-
-Visit:
+Then open:
 
 http://127.0.0.1:5000
+🧪 Model Training
 
-🐳 Docker Setup (Optional)
-Build Image
-docker build -t smartoutfit-ai .
+To retrain the ML model:
 
-Run Container
-docker run -p 5000:5000 smartoutfit-ai
+python train_model.py
 
-🎯 Example Use Case
+This regenerates:
 
-Input
+ml_model.pkl
 
-Event: Formal Dinner
+event_encoder.pkl
 
-Weather: Cold
+weather_encoder.pkl
 
-Output
+📌 Future Improvements
 
-Blazer
+Explicit rating-based feedback learning
 
-Formal Shirt
+Model evaluation metrics
 
-Trousers
+Auto-retraining pipeline
 
-Leather Shoes
+Improved justification explanations
 
-With generated explanation describing style compatibility.
-
-🔬 Design Decisions
-
-Hybrid rule-based logic ensures deterministic outfit validity
-
-Modular architecture allows ML extension without breaking core system
-
-Separation of backend, recommendation engine, and UI
-
-Persistent database design for scalable wardrobe management
-
-📈 Future Enhancements
-
-Personalized user preference learning
-
-Visual deep learning-based classification
-
-User authentication & multi-user support
-
-Cloud deployment (AWS / GCP)
-
-Mobile-optimized UI
+Deep learning image classification extension
 
 👩‍💻 Author
 
-Golla Sanjana Reddy
-Integrated M.Tech – Software Engineering
-
-📌 Project Purpose
-
-This project was built to demonstrate:
-
-Full-stack system architecture
-
-REST API design
-
-Database modeling
-
-Explainable recommendation logic
-
-Containerization fundamentals
+Sanjana Reddy
+Integrated MTech(Software Engineering)

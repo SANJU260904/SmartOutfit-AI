@@ -1,5 +1,16 @@
 import random
+import numpy as np
+import joblib
+from datetime import datetime, timedelta
 from models import ClothingItem
+from flask import current_app
+import sqlite3
+
+# ------------------ LOAD ML MODEL ------------------
+
+model = joblib.load("ml_model.pkl")
+le_event = joblib.load("event_encoder.pkl")
+le_weather = joblib.load("weather_encoder.pkl")
 
 # ------------------ CATEGORY NORMALIZATION ------------------
 
@@ -7,22 +18,17 @@ CATEGORY_MAP = {
     "shirt": "top",
     "t-shirt": "top",
     "blouse": "top",
-
     "jeans": "pants",
     "trousers": "pants",
     "shorts": "pants",
-
     "frock": "dress",
     "gown": "dress",
     "chudidhar": "chudidhar",
     "saree": "saree",
-
     "kurti": "kurti",
-
     "jacket": "outer",
     "coat": "outer",
     "sweater": "sweater",
-
     "top": "top",
     "pants": "pants",
     "skirt": "skirt",
@@ -53,7 +59,7 @@ def event_ok(cats, event):
         return (
             ("top" in cats and "pants" in cats) or
             ("kurti" in cats and "pants" in cats) or
-            (cats == {"dress"} and "skirt" not in cats)
+            (cats == {"dress"})
         )
 
     if event == "party":
@@ -132,28 +138,28 @@ def generate_base_outfits(item_map):
 
     return outfits
 
-# ------------------ JUSTIFICATION ------------------
+# ------------------ NOVELTY CHECK ------------------
 
-def build_justification(cats, event, weather):
-    parts = []
+def recently_used(item_ids):
+    conn = sqlite3.connect("instance/smartoutfit.db")
+    cursor = conn.cursor()
 
-    if "dress" in cats:
-        parts.append("a clean one-piece look")
-    if "kurti" in cats:
-        parts.append("a traditional Indian silhouette")
-    if "top" in cats and "pants" in cats:
-        parts.append("a comfortable everyday pairing")
-    if "top" in cats and "skirt" in cats:
-        parts.append("a stylish modern combination")
+    cutoff = datetime.now() - timedelta(days=3)
 
-    if weather == "cold":
-        parts.append("layered with a sweater for warmth")
-    if weather == "rainy":
-        parts.append("paired with a raincoat for weather protection")
+    cursor.execute(
+        "SELECT items_used, created_at FROM outfit_history"
+    )
+    rows = cursor.fetchall()
+    conn.close()
 
-    parts.append(f"appropriate for a {event} setting")
-
-    return "Chosen because it offers " + ", ".join(parts) + "."
+    for items_used, created_at in rows:
+        if not created_at:
+            continue
+        if datetime.fromisoformat(created_at) >= cutoff:
+            past_ids = list(map(int, items_used.split(",")))
+            if set(past_ids) == set(item_ids):
+                return True
+    return False
 
 # ------------------ MAIN RECOMMENDER ------------------
 
@@ -164,7 +170,7 @@ def recommend_outfits(event="casual", weather="clear", k=3):
 
     bases = generate_base_outfits(item_map)
     seen = set()
-    valid = []
+    scored = []
 
     for base in bases:
         cats = [item_map[i]._norm for i in base]
@@ -179,15 +185,51 @@ def recommend_outfits(event="casual", weather="clear", k=3):
         key = tuple(sorted(final))
         if key in seen:
             continue
-
         seen.add(key)
-        valid.append(final)
 
-    random.shuffle(valid)
-    valid = valid[:k]
+        items = [item_map[i] for i in final]
+
+        # -------- Feature Engineering --------
+        favorite_count = sum(int(it.favorited) for it in items)
+        avg_times_worn = sum(it.times_worn for it in items) / len(items)
+        unique_categories = len(set(it._norm for it in items))
+        total_items = len(items)
+
+        try:
+            event_encoded = le_event.transform([event])[0]
+        except:
+            event_encoded = 0
+
+        try:
+            weather_encoded = le_weather.transform([weather])[0]
+        except:
+            weather_encoded = 0
+
+        features = np.array([[
+            event_encoded,
+            weather_encoded,
+            favorite_count,
+            avg_times_worn,
+            unique_categories,
+            total_items
+        ]])
+
+        score = model.predict_proba(features)[0][1]
+
+        # -------- Novelty Penalty --------
+        if recently_used(final):
+            score -= 0.15
+
+        scored.append((score, final))
+
+    if not scored:
+        return []
+
+    scored.sort(reverse=True, key=lambda x: x[0])
+    top = scored[:k]
 
     results = []
-    for o in valid:
+    for score, o in top:
         cats = {item_map[i]._norm for i in o}
         results.append({
             "items": [{
@@ -197,7 +239,7 @@ def recommend_outfits(event="casual", weather="clear", k=3):
                 "times_worn": item_map[i].times_worn,
                 "favorited": bool(item_map[i].favorited)
             } for i in o],
-            "justification": build_justification(cats, event, weather)
+            "justification": f"AI-ranked recommendation (score: {round(score, 2)})"
         })
 
     return results
