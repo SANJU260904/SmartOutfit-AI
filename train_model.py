@@ -74,6 +74,7 @@ y = df["target"]
 
 # Train model
 model = LogisticRegression()
+print("Training samples:", len(X))
 model.fit(X, y)
 
 # Save model & encoders

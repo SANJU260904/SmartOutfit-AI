@@ -3,7 +3,6 @@ import numpy as np
 import joblib
 from datetime import datetime, timedelta
 from models import ClothingItem
-from flask import current_app
 import sqlite3
 
 # ------------------ LOAD ML MODEL ------------------
@@ -18,21 +17,29 @@ CATEGORY_MAP = {
     "shirt": "top",
     "t-shirt": "top",
     "blouse": "top",
+
     "jeans": "pants",
     "trousers": "pants",
-    "shorts": "pants",
+    "pants": "pants",
+
+    # IMPORTANT: keep shorts separate
+    "shorts": "shorts",
+
     "frock": "dress",
     "gown": "dress",
+    "dress": "dress",
+
     "chudidhar": "chudidhar",
     "saree": "saree",
     "kurti": "kurti",
+
     "jacket": "outer",
     "coat": "outer",
+    "outer": "outer",
     "sweater": "sweater",
+
     "top": "top",
-    "pants": "pants",
-    "skirt": "skirt",
-    "dress": "dress"
+    "skirt": "skirt"
 }
 
 def normalize(cat):
@@ -55,25 +62,35 @@ def _load_items():
 def event_ok(cats, event):
     cats = set(cats)
 
+    # CASUAL
     if event == "casual":
         return (
-            ("top" in cats and "pants" in cats) or
+            ("top" in cats and ("pants" in cats or "shorts" in cats)) or
             ("kurti" in cats and "pants" in cats) or
             (cats == {"dress"})
         )
 
+    # FORMAL (shirt + pants only)
+    if event == "formal":
+        return (
+            ("top" in cats and "pants" in cats)
+        )
+
+    # PARTY
     if event == "party":
         return (
             cats == {"dress"} or
             ("top" in cats and "skirt" in cats)
         )
 
+    # DATE
     if event == "date":
         return (
             cats == {"dress"} or
             ("top" in cats and ("pants" in cats or "skirt" in cats))
         )
 
+    # TRADITIONAL (NO shorts allowed)
     if event == "traditional":
         return (
             ("kurti" in cats and "pants" in cats) or
@@ -91,7 +108,7 @@ def apply_weather_layers(base, item_map, weather):
 
     if weather == "cold":
         for i, it in item_map.items():
-            if it._norm == "sweater" and i not in layered:
+            if it._norm in ["sweater", "outer"] and i not in layered:
                 layered.append(i)
                 break
 
@@ -123,6 +140,10 @@ def generate_base_outfits(item_map):
             outfits.append([t, p])
 
     for t in by_cat.get("top", []):
+        for s in by_cat.get("shorts", []):
+            outfits.append([t, s])
+
+    for t in by_cat.get("top", []):
         for s in by_cat.get("skirt", []):
             outfits.append([t, s])
 
@@ -146,9 +167,7 @@ def recently_used(item_ids):
 
     cutoff = datetime.now() - timedelta(days=3)
 
-    cursor.execute(
-        "SELECT items_used, created_at FROM outfit_history"
-    )
+    cursor.execute("SELECT items_used, created_at FROM outfit_history")
     rows = cursor.fetchall()
     conn.close()
 
@@ -214,7 +233,7 @@ def recommend_outfits(event="casual", weather="clear", k=3):
             total_items
         ]])
 
-        score = model.predict_proba(features)[0][1]
+        score = float(model.predict_proba(features)[0][1])
 
         # -------- Novelty Penalty --------
         if recently_used(final):
@@ -230,7 +249,6 @@ def recommend_outfits(event="casual", weather="clear", k=3):
 
     results = []
     for score, o in top:
-        cats = {item_map[i]._norm for i in o}
         results.append({
             "items": [{
                 "id": item_map[i].id,
